@@ -73,10 +73,10 @@ def associateTopicInterest(user):
   dico.update({0:0})
   return dico
   
-alpha=1 #We use an extreme value of α = 1.0 so that a user’s satisfaction 
+#We use an extreme value of α = 1.0 so that a user’s satisfaction 
 #with a consumed document is fully dictated by documentquality. 
 
-def userSatisfaction(user,document):
+def userSatisfaction(user,document,alpha=1):
   ''' A user’s satisfaction S(u, d) with a consumed document d is a function f(I(u, d), Ld)
 of user u’s interest and document d’s quality. While the form of f may be quite complex
 in general, we assume a simple convex combination S(u, d) = (1 − α)I(u, d) + αLd.
@@ -217,17 +217,24 @@ class RecSys1(gym.Env):
 	def next_Observation(self):
 		self.slate=random.choice(self.allslates)
 		self.choicedoc=random.choice(self.slate)
-		self.historic.append(self.choicedoc.id)
-		return self.choicedoc.id
+		self.historic.append(conditionalLogitModel(self.user,self.choicedoc,self.slate))
+		return conditionalLogitModel(self.user,self.choicedoc,self.slate)
 
 	def _take_doc(self,action):
 		self.slate=random.choice(self.allslates)
 		self.choicedoc=random.choice(self.slate)
-		self.historic.append(self.choicedoc.id)
+		self.historic.append(conditionalLogitModel(self.user,self.choicedoc,self.slate))
 
 	def step(self, action):
 		self._take_doc(action)
-		reward=bonus(self.user,self.choicedoc)
+		if conditionalLogitModel(self.user,self.choicedoc,self.slate)==0:
+			reward=1
+		elif conditionalLogitModel(self.user,self.choicedoc,self.slate)>=((featureVector(self.user,self.choicedoc)[2]+1)/2):
+			reward=2	
+		elif conditionalLogitModel(self.user,self.choicedoc,self.slate)<=((1-featureVector(self.user,self.choicedoc)[2])/2):
+			reward=2
+		else :
+			reward=0
 		self.budget=self.budget-self.choicedoc.length+reward
 		done=self.budget<0
 		obser=self.next_Observation()
