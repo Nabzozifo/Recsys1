@@ -189,13 +189,19 @@ def changeInterestUser(user,document,slate):
 	""" compute a new user's interest after consuming a document A positive change in interest, It ← It + ∆t(It),
 	occurs with probability [I(u, d) + 1]/2, and a negative change, It ← It − ∆t(It), with
 	probability [1 − I(u, d)]/2. """
+	topicn=document.topic
+	if topicn==len(topic):
+		topicn=len(topic)-1
+
 	if conditionalLogitModel(user,document,slate)==0:
 		return 0
 	
 	elif conditionalLogitModel(user,document,slate)>=((featureVector(user,document)[2]+1)/2):
+		#user.interests[topicn]=featureVector(user,document)[2]+(-y*abs(featureVector(user,document)[2])+y)*-featureVector(user,document)[2]
 		return featureVector(user,document)[2]+(-y*abs(featureVector(user,document)[2])+y)*-featureVector(user,document)[2]
 		
 	elif conditionalLogitModel(user,document,slate)<=((1-featureVector(user,document)[2])/2):
+		#user.interests[topicn]=featureVector(user,document)[2]-(-y*abs(featureVector(user,document)[2])+y)*-featureVector(user,document)[2]
 		return featureVector(user,document)[2]-(-y*abs(featureVector(user,document)[2])+y)*-featureVector(user,document)[2]
 
 	else :
@@ -211,49 +217,65 @@ class RecSys1(gym.Env):
 		self.allslates=allPossibleSlates(10,3,self.mdocs)	
 		self.budget=200
 		self.historic=[]
-		self.action_space=spaces.Discrete(3)
-		self.observation_space=spaces.Discrete(combin(10,3))
+		self.action_space=spaces.Discrete(combin(10,3))#allPossibleSlates(10,3,self.mdocs)#gym.spaces.Box(low=0,high=120,shape=(4,120),dtype=np.int)spaces.Discrete(combin(10,3))
+		self.observation_space=gym.spaces.Box(low=-3, high=3, shape=(1, 3), dtype=np.float16)
 
 	def next_Observation(self):
-		self.slate=random.choice(self.allslates)
+		self.slate=self.allslates[self.action_space.sample()]
 		self.choicedoc=random.choice(self.slate)
-		self.historic.append(conditionalLogitModel(self.user,self.choicedoc,self.slate))
-		return conditionalLogitModel(self.user,self.choicedoc,self.slate)
+		self.historic.append(self.choicedoc.id)
+		topicn=self.choicedoc.topic
+		if topicn==len(topic):
+			topicn=len(topic)-1
+		'''obs=[self.user.interests[topicn],
+		conditionalLogitModel(self.user,self.choicedoc,self.slate),
+		userSatisfaction(self.user,self.choicedoc)]'''
+
+
+		return self.user.interests[topicn]
 
 	def _take_doc(self,action):
-		self.slate=random.choice(self.allslates)
+		self.slate=self.allslates[action]
 		self.choicedoc=random.choice(self.slate)
-		self.historic.append(conditionalLogitModel(self.user,self.choicedoc,self.slate))
+		self.historic.append(self.choicedoc.id)
 
 	def step(self, action):
 		self._take_doc(action)
-		if conditionalLogitModel(self.user,self.choicedoc,self.slate)==0:
+		'''if conditionalLogitModel(self.user,self.choicedoc,self.slate)==0:
 			reward=1
 		elif conditionalLogitModel(self.user,self.choicedoc,self.slate)>=((featureVector(self.user,self.choicedoc)[2]+1)/2):
 			reward=2	
 		elif conditionalLogitModel(self.user,self.choicedoc,self.slate)<=((1-featureVector(self.user,self.choicedoc)[2])/2):
 			reward=2
 		else :
-			reward=0
-		self.budget=self.budget-self.choicedoc.length+reward
+			reward=0'''
+		reward=bonus(self.user,self.choicedoc)
+		self.budget=self.budget-self.choicedoc.length+bonus(self.user,self.choicedoc)
 		done=self.budget<0
 		obser=self.next_Observation()
 		info={"Budgetafterconsumption":self.budget}
+		'''topicn=self.choicedoc.topic
+		if topicn==len(topic):
+			topicn=len(topic)-1
+		self.user.interests[topicn]=conditionalLogitModel(self.user,self.choicedoc,self.slate)'''
 		return obser,reward,done,info
 
 	def reset(self):
 		self.budget=200
 		self.historic=[]
+		return self.next_Observation()
 
 	def render(self):
 		topicn=self.choicedoc.topic
 		if topicn==len(topic):
 			topicn=len(topic)-1
-		print("Document iD : ",self.choicedoc.id)
+		#print("Document iD : ",self.choicedoc.id)
 		print("Document's Topic : ",self.choicedoc.topic)
-		print("Document's length : ",self.choicedoc.length)
-		print("Document's Inherated Quality = user satisfaction beacause alpha=1 : ",self.choicedoc.inhQuality)
-		print("user's interest before consuming document : ",self.user.interests[topicn])
-		print("Logit Model : ",conditionalLogitModel(self.user,self.choicedoc,self.slate))
+		#print("Document's length : ",self.choicedoc.length)
+		#print("Document's Inherated Quality = user satisfaction beacause alpha=1 : ",self.choicedoc.inhQuality)
+		#print("user's interest before consuming document : ",self.user.interests[topicn])
+		#print("Logit Model : ",conditionalLogitModel(self.user,self.choicedoc,self.slate))
 		print("user's interest after consuming document : ",changeInterestUser(self.user,self.choicedoc,self.slate))
 		print("User's historic : ",self.historic)
+		print("Total doc consum : ",len(self.historic))
+
