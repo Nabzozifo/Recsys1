@@ -48,7 +48,7 @@ def qLearning(env, num_episodes, discount_factor = 1.0,
 	# Action value function 
 	# A nested dictionary that maps 
 	# state -> (action -> action-value). 
-	Q = defaultdict(lambda: np.zeros(env.action_space.n)) 
+	Q = defaultdict(lambda: np.zeros(env.action_space.n*4)) 
 
 	# Keeps track of useful statistics 
 	stats = plottings.EpisodeStats( 
@@ -57,13 +57,13 @@ def qLearning(env, num_episodes, discount_factor = 1.0,
 	
 	# Create an epsilon greedy policy function 
 	# appropriately for environment action space 
-	policy = createEpsilonGreedyPolicy(Q, epsilon, env.action_space.n) 
+	policy = createEpsilonGreedyPolicy(Q, epsilon, env.action_space.n*4) 
 	
 	# For every episode 
 	for ith_episode in range(num_episodes): 
-		state = env.action_space.sample()
+		state = env.reset()
 		# Reset the environment and pick the first action 
-		env.reset()
+		
 
 		
 		
@@ -87,6 +87,7 @@ def qLearning(env, num_episodes, discount_factor = 1.0,
 			stats.episode_lengths[ith_episode] = t 
 			
 			# TD Update 
+			
 			best_next_action = np.argmax(Q[next_state])	 
 			td_target = reward + discount_factor * Q[next_state][best_next_action] 
 			td_delta = td_target - Q[state][action] 
@@ -101,13 +102,13 @@ def qLearning(env, num_episodes, discount_factor = 1.0,
 	return Q,stats
 
 q_table,stats=qLearning(env, 100) 
-'''print(q_table)
-plottings.plot_episode_stats(stats)'''
+#print(q_table)
+plottings.plot_episode_stats(stats)
 
 """Evaluate agent's performance after Q-learning"""
 
 total_epochs=0
-episodes = 80
+episodes = 50
 Reward=[]
 total_nb_nul_doc=0
 total_nb_pass_doc=0
@@ -130,12 +131,12 @@ for _ in range(episodes):
 		action = np.argmax(q_table[state])
 		state, reward, done, info = env.step(action)
 		total_reward+=reward
-		if reward==0 :
+		'''if reward==0 :
 			nb_pass_doc+=1
 		elif reward==1:
 			nb_nul_doc+=1
 		else :
-			nb_consomdoc+=1
+			nb_consomdoc+=1'''
 
 		epochs += 1
 	Reward.append(total_reward)
@@ -143,9 +144,9 @@ for _ in range(episodes):
 	total_nb_pass_doc+=nb_pass_doc
 	total_nb_consomdoc+=nb_consomdoc
 	total_epochs += epochs
-print("Total Documents consomés : ",total_nb_consomdoc)
+'''print("Total Documents consomés : ",total_nb_consomdoc)
 print("Total Documents que utilisateur les a ignoré : ",total_nb_pass_doc)
-print("Total Documents non consommés (Document null) : ",total_nb_nul_doc)
+print("Total Documents non consommés (Document null) : ",total_nb_nul_doc)'''
 print("Average Reward : ",sum(Reward)/len(Reward))
 print(f"Results after {episodes} episodes:")
 print(f"Average timesteps per episode: {total_epochs / episodes}")
