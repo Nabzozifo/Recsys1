@@ -7,15 +7,20 @@ import matplotlib.style
 import numpy as np 
 import pandas as pd 
 import sys 
-  
-  
 from collections import defaultdict 
-import plottings 
-  
+import plottings  
 matplotlib.style.use('ggplot') 
 import gym_Recsys1
 import time
-env = gym.make('Recsys1-v0')
+import sys
+sys.path.append('gym_Recsys1/gym_Recsys1/envs/')
+import Recsys1_env as rcs
+
+#print(rcs.geNerNuser(10))
+#random.seed(30)
+users=rcs.geNerNuser(10)
+docs=rcs.geNerNdocument(100)
+env = gym.make('Recsys1-v0',user=users[1],alldocs=docs)
 
 def createEpsilonGreedyPolicy(Q, epsilon, num_actions): 
 	""" 
@@ -63,11 +68,6 @@ def qLearning(env, num_episodes, discount_factor = 1.0,
 	for ith_episode in range(num_episodes): 
 		state = env.reset()
 		# Reset the environment and pick the first action 
-		
-
-		
-		
-		
 		for t in itertools.count(): 
 			
 			# get probabilities of all actions from current state 
@@ -103,56 +103,54 @@ def qLearning(env, num_episodes, discount_factor = 1.0,
 
 q_table,stats=qLearning(env, 100) 
 #print(q_table)
-plottings.plot_episode_stats(stats)
+#plottings.plot_episode_stats(stats)
 
 """Evaluate agent's performance after Q-learning"""
 
 total_epochs=0
-episodes = 50
+episodes = 10
 Reward=[]
 total_nb_nul_doc=0
 total_nb_pass_doc=0
 total_nb_consomdoc=0
-
+LTV=[]
+doc_consume=[]
 for _ in range(episodes):
    
-	state = env.action_space.sample()
-	env.reset()
+	state = env.reset()
 	nb_consomdoc=0
 	nb_nul_doc=0
 	nb_pass_doc=0
 	epochs= 0
 	total_reward = 0
-	
+	total_ltv=0
 	
 	done = False
 	
 	while not done:
 		action = np.argmax(q_table[state])
+		ltv=np.max(q_table[state])
 		state, reward, done, info = env.step(action)
 		total_reward+=reward
-		'''if reward==0 :
-			nb_pass_doc+=1
-		elif reward==1:
-			nb_nul_doc+=1
-		else :
-			nb_consomdoc+=1'''
-
+		total_ltv+=ltv
 		epochs += 1
 	Reward.append(total_reward)
+	LTV.append(total_ltv)
 	total_nb_nul_doc+=nb_nul_doc
 	total_nb_pass_doc+=nb_pass_doc
 	total_nb_consomdoc+=nb_consomdoc
-	total_epochs += epochs
-'''print("Total Documents consomés : ",total_nb_consomdoc)
-print("Total Documents que utilisateur les a ignoré : ",total_nb_pass_doc)
-print("Total Documents non consommés (Document null) : ",total_nb_nul_doc)'''
+	total_epochs +=epochs 
+	doc_consume+=env.historic
 print("Average Reward : ",sum(Reward)/len(Reward))
-print(f"Results after {episodes} episodes:")
-print(f"Average timesteps per episode: {total_epochs / episodes}")
-
-'''print(Q)'''
-
-#plt.plot(Reward)
-#plt.show()
+from collections import Counter
+print("user : ",users[1])
+print("total document consomme : ",len(doc_consume))
+z=Counter(doc_consume)
+print("les 10 Documents les plus consomemer : ")
+rest=sorted(z.items(), key=lambda x: x[1],reverse=True)
+#rest2=sorted(z.keys(), key=lambda x: x[1],reverse=True)
+for i in range(10):
+	print("Documents : ",rest[i][0].__str__(),"Nombre de fois consommes : ",rest[i][1])
+plt.plot(LTV)
+plt.show()
 #plottings.plot_episode_stats(stats) 
