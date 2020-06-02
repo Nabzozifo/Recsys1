@@ -16,12 +16,12 @@ import time
 env = gym.make('Recsys1-v0')
 LEARNING_RATE= 0.1
 DISCOUNT=0.95
-EPISODES=500
+EPISODES=100
 
 Total_reward=[]
 DISCRETRE_OS_SIZE=[20]*len(env.observation_space.high)
 discrete_os_win_size=(env.observation_space.high-env.observation_space.low)/DISCRETRE_OS_SIZE
-q_table=np.random.uniform(low=-10,high=10,size=env.action_space.n*4)
+q_table=np.zeros(env.action_space.n*4)
 
 # Exploration settings
 epsilon = 1  # not a constant, qoing to be decayed
@@ -60,6 +60,7 @@ for episode in range(EPISODES):
 
 			# Maximum possible Q value in next step (for new state)
 			max_future_q = np.max(q_table[new_discrete_state])
+			
 
 			# Current Q value (for current state and performed action)
 			current_q = q_table[discrete_state + (action,)]
@@ -77,6 +78,8 @@ for episode in range(EPISODES):
 	if END_EPSILON_DECAYING >= episode >= START_EPSILON_DECAYING:
 		epsilon -= epsilon_decay_value
 
+'''for dc in env.mdocs:
+	print(dc.__str__())'''
 
 env.close()
 
