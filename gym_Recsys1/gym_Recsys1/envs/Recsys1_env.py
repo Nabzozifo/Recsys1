@@ -38,13 +38,13 @@ class Document:
 		self.length=length #length of document
 		self.inhQuality=inhQuality #inherted quality fo document
 	
-	'''def __str__(self):
-    	return str(self.__class__) + ": " + str(self.__dict__)'''
+	def __str__(self):
+		return str(self.__class__) + ": " + str(self.__dict__)
 
 def geNerNdocument(N):
 	''' generate a set of N document  '''
-	Doc=[0 for i in range(N)]
-	for i in range(N):
+	Doc=[0 for i in range(N+1)]
+	for i in range(N+1):
 		Doc[i]=Document(random.getrandbits(32),choiceAleaList(topic,20),4,choiceAleaList(quality(),20))
 	return Doc
 
@@ -53,45 +53,49 @@ interest=list(np.random.uniform(-1,1,20))  #Interest of user in different topic
 	
 class User :
 
-	def __init__(self,ids,interests,age,sexe,lastRecom=0):
+	def __init__(self,ids,interests,age,associate_topic_interet,sexe,lastRecom=0,localisation=1234):
 		self.id=ids
 		self.lastRecom=lastRecom # user's last recommendation
 		self.sexe=sexe
 		self.age=age
 		self.interests=interests #user'sinterest on topic of document
+		self.associate_topic_interet=associate_topic_interet
+		self.localisation=localisation
 
-	'''def __str__(self):
-    	return str(self.__class__) + ": " + str(self.__dict__)'''
+	def __str__(self):
+		return str(self.__class__) + ": " + str(self.__dict__)
 
-def associateTopicInterest(user):
+def associateTopicInterest():
   ''' Topic =====> user's interest '''
   list1=topic
-  list2=user.interests
+  list2=interest
   random.Random(4).shuffle(list1)
   random.Random(4).shuffle(list2)
   dico=dict(zip(list1,list2))
   dico.update({0:0})
   return dico
   
+def geNerNuser(N):
+	''' generate a set of N user  '''
+	us=[0 for i in range(N+1)]
+	for i in range(N+1):
+		us[i]=User(random.getrandbits(16),list(np.random.uniform(-1,1,20)),random.choice([i for i in range(1,90)]),associateTopicInterest(),random.choice([i for i in range(1,3)]))
+	return us
+
 #We use an extreme value of α = 1.0 so that a user’s satisfaction 
 #with a consumed document is fully dictated by documentquality. 
 
 def userSatisfaction(user,document,alpha=1):
-  ''' A user’s satisfaction S(u, d) with a consumed document d is a function f(I(u, d), Ld)
-of user u’s interest and document d’s quality. While the form of f may be quite complex
-in general, we assume a simple convex combination S(u, d) = (1 − α)I(u, d) + αLd.
- '''
-  topicn=document.topic
-  if topicn==len(topic):
-    topicn=len(topic)-1
-  return ((1-alpha)*associateTopicInterest(user)[topicn])+(alpha*document.inhQuality)
+	''' A user’s satisfaction S(u, d) with a consumed document d is a function f(I(u, d), Ld)
+	of user u’s interest and document d’s quality. While the form of f may be quite complex
+	in general, we assume a simple convex combination S(u, d) = (1 − α)I(u, d) + αLd.'''
+	return ((1-alpha)*user.associate_topic_interet[document.topic]+(alpha*document.inhQuality))
 
 #==================================== User Choice Model ====================================
-tau=0.01 #constante of the conditional logit
 
 def generSlateofmDoc(m,user,alldoc):
 	''' generate a slate of m best documents candidate from all Documents for a user in relation to the interest of the user  '''
-	d=associateTopicInterest(user)
+	d=user.associate_topic_interet
 	A=sorted(d.items(), key=lambda x: x[1], reverse=True)
 	kdoc=[]
 	for j in range(m+1) :
@@ -102,6 +106,18 @@ def generSlateofmDoc(m,user,alldoc):
 				break
 			else:
 				i=i+1
+	return kdoc
+
+def generSlateofmbestDoc(m,alldoc):
+	''' generate a slate of m best documents candidate from all Documents for a user in relation to the interest of the user  '''
+	
+	def myFunc(e):
+		return e.inhQuality
+
+	alldoc.sort(key=myFunc,reverse=True)
+	kdoc=[]
+	for i in range(m) :
+				kdoc.append(alldoc[i])
 	return kdoc
 
 def generSlateofmDocAlea(m,alldoc):
@@ -115,15 +131,10 @@ def generSlateofkDoc(k,alldoc):
 
 def featureVector(user,document):
 	''' a set of user-item characteristics [userID,documentID,userInterst,documentTopic,documentLength,documentInhquality,usersatisfaction]'''
-	topicn=document.topic
-	if topicn==len(topic):
-		topicn=len(topic)-1
-	return [user.id,document.id,associateTopicInterest(user)[topicn],topicn,document.inhQuality,userSatisfaction(user,document)]
+	return [user.id,document.id,user.associate_topic_interet[document.topic],document.topic,document.inhQuality,userSatisfaction(user,document)]
 
-def unnormalizedprobability(user,document):
+def unnormalizedprobability(user,document,tau=0.1):
 	''' unnormalized probability v(xij ) In the case of the conditional logit, v(xij ) = exp(τu(xij )), but any arbitrary v can be used '''
-	if featureVector(user,document)[2]==0:
-		return 0
 	return math.exp(tau*userSatisfaction(user,document))
 
 def somme(user,document):
@@ -136,8 +147,6 @@ def somme(user,document):
 def conditionalLogitModel(user,document,slate):#(Eq. (2))
 	''' The conditional logit model is an instance of a more general conditional choice format in
 	which a user  selects document ∈ Documents with unnormalized probability  '''
-	if featureVector(user,document)[2]==0:
-		return 0
 	return unnormalizedprobability(user,document)/somme(user,slate)
 
 def addNullDoc(slate):
@@ -149,17 +158,17 @@ def secondChoicemodel():
 	return 0
 
 def combin(n, k):
-    """Nombre de combinaisons de n objets pris k a k"""
-    if k > n//2:
-        k = n-k
-    x = 1
-    y = 1
-    i = n-k+1
-    while i <= n:
-        x = (x*i)//y
-        y += 1
-        i += 1
-    return x
+	"""Nombre de combinaisons de n objets pris k a k"""
+	if k > n//2:
+		k = n-k
+	x = 1
+	y = 1
+	i = n-k+1
+	while i <= n:
+		x = (x*i)//y
+		y += 1
+		i += 1
+	return x
 
 def allPossibleSlates(m,k,mdoc):
   """ generate all combinaisons of slate of k doc in m doc """
@@ -189,75 +198,65 @@ def changeInterestUser(user,document,slate):
 	""" compute a new user's interest after consuming a document A positive change in interest, It ← It + ∆t(It),
 	occurs with probability [I(u, d) + 1]/2, and a negative change, It ← It − ∆t(It), with
 	probability [1 − I(u, d)]/2. """
-	topicn=document.topic
-	if topicn==len(topic):
-		topicn=len(topic)-1
-
-	if conditionalLogitModel(user,document,slate)==0:
+	if user.associate_topic_interet[document.topic]==0:
 		return 0
 	
-	elif conditionalLogitModel(user,document,slate)>=((featureVector(user,document)[2]+1)/2):
-		#user.interests[topicn]=featureVector(user,document)[2]+(-y*abs(featureVector(user,document)[2])+y)*-featureVector(user,document)[2]
-		return featureVector(user,document)[2]+(-y*abs(featureVector(user,document)[2])+y)*-featureVector(user,document)[2]
+	elif conditionalLogitModel(user,document,slate)>=((user.associate_topic_interet[document.topic]+1)/2):
+		user.associate_topic_interet[document.topic]=user.associate_topic_interet[document.topic]-(-y*abs(user.associate_topic_interet[document.topic])+y)*-user.associate_topic_interet[document.topic]
+		return user.associate_topic_interet[document.topic]+(-y*abs(user.associate_topic_interet[document.topic])+y)*-user.associate_topic_interet[document.topic]
 		
-	elif conditionalLogitModel(user,document,slate)<=((1-featureVector(user,document)[2])/2):
-		#user.interests[topicn]=featureVector(user,document)[2]-(-y*abs(featureVector(user,document)[2])+y)*-featureVector(user,document)[2]
-		return featureVector(user,document)[2]-(-y*abs(featureVector(user,document)[2])+y)*-featureVector(user,document)[2]
+	elif conditionalLogitModel(user,document,slate)<=((1-user.associate_topic_interet[document.topic])/2):
+		user.associate_topic_interet[document.topic]=user.associate_topic_interet[document.topic]-(-y*abs(user.associate_topic_interet[document.topic])+y)*-user.associate_topic_interet[document.topic]
+		return user.associate_topic_interet[document.topic]-(-y*abs(user.associate_topic_interet[document.topic])+y)*-user.associate_topic_interet[document.topic]
 
 	else :
-		return featureVector(user,document)[2]
-	
+		return user.associate_topic_interet[document.topic]
 
-	
+def choiceDocslate(user,slate):
+	for x in slate:
+		if unnormalizedprobability(user,x)==max([unnormalizedprobability(user,x) for x in slate]):
+			return slate[slate.index(x)]
+
+
+
 class RecSys1(gym.Env):
-	def __init__(self):
-		self.user=User(random.getrandbits(16),list(np.random.uniform(-1,1,20)),random.choice([i for i in range(1,90)]),random.choice([i for i in range(1,3)]))
-		self.alldocs=geNerNdocument(100)
-		self.mdocs=generSlateofmDoc(10,self.user,self.alldocs)
-		self.allslates=allPossibleSlates(10,3,self.mdocs)	
+	def __init__(self,user=None,alldocs=None):
+		self.user=user
+		self.alldocs=alldocs
+		#self.mdocs=generSlateofmDoc(10,self.user,self.alldocs)
+		self.mdocs=generSlateofmbestDoc(10,self.alldocs)
+		self.allslates=allPossibleSlates(len(self.alldocs),3,self.alldocs)	
 		self.budget=200
 		self.historic=[]
-		self.action_space=spaces.Discrete(combin(10,3))#allPossibleSlates(10,3,self.mdocs)#gym.spaces.Box(low=0,high=120,shape=(4,120),dtype=np.int)spaces.Discrete(combin(10,3))
-		self.observation_space=gym.spaces.Box(low=-3, high=3, shape=(1, 3), dtype=np.float16)
+		self.action_space=spaces.Discrete(combin(len(self.mdocs),3))#allPossibleSlates(10,3,self.mdocs)#gym.spaces.Box(low=0,high=120,shape=(4,120),dtype=np.int)spaces.Discrete(combin(10,3))
+		self.observation_space=gym.spaces.Box(low=-3, high=3, shape=(1, 1), dtype=np.float16)
 
 	def next_Observation(self):
 		self.slate=self.allslates[self.action_space.sample()]
+		#self.choicedoc=choiceDocslate(self.user,self.slate)
 		self.choicedoc=random.choice(self.slate)
-		self.historic.append(self.choicedoc.id)
-		topicn=self.choicedoc.topic
-		if topicn==len(topic):
-			topicn=len(topic)-1
+		self.user.lastRecom=self.choicedoc
+		self.historic.append(self.choicedoc)
 		'''obs=[self.user.interests[topicn],
 		conditionalLogitModel(self.user,self.choicedoc,self.slate),
 		userSatisfaction(self.user,self.choicedoc)]'''
-
-
-		return self.user.interests[topicn]
+		return self.user.associate_topic_interet[self.choicedoc.topic]
 
 	def _take_doc(self,action):
 		self.slate=self.allslates[action]
+		#self.choicedoc=choiceDocslate(self.user,self.slate)
 		self.choicedoc=random.choice(self.slate)
-		self.historic.append(self.choicedoc.id)
+		self.user.lastRecom=self.choicedoc
+		self.historic.append(self.choicedoc)
 
 	def step(self, action):
 		self._take_doc(action)
-		'''if conditionalLogitModel(self.user,self.choicedoc,self.slate)==0:
-			reward=1
-		elif conditionalLogitModel(self.user,self.choicedoc,self.slate)>=((featureVector(self.user,self.choicedoc)[2]+1)/2):
-			reward=2	
-		elif conditionalLogitModel(self.user,self.choicedoc,self.slate)<=((1-featureVector(self.user,self.choicedoc)[2])/2):
-			reward=2
-		else :
-			reward=0'''
 		reward=bonus(self.user,self.choicedoc)
 		self.budget=self.budget-self.choicedoc.length+bonus(self.user,self.choicedoc)
 		done=self.budget<0
 		obser=self.next_Observation()
-		info={"Budgetafterconsumption":self.budget}
-		'''topicn=self.choicedoc.topic
-		if topicn==len(topic):
-			topicn=len(topic)-1
-		self.user.interests[topicn]=conditionalLogitModel(self.user,self.choicedoc,self.slate)'''
+		info={"Budgetafterconsumption": self.budget,"Satisfaction":userSatisfaction(self.user,self.choicedoc)}
+		self.user.associate_topic_interet[self.choicedoc.topic]=conditionalLogitModel(self.user,self.choicedoc,self.slate)
 		return obser,reward,done,info
 
 	def reset(self):
@@ -266,9 +265,6 @@ class RecSys1(gym.Env):
 		return self.next_Observation()
 
 	def render(self):
-		topicn=self.choicedoc.topic
-		if topicn==len(topic):
-			topicn=len(topic)-1
 		#print("Document iD : ",self.choicedoc.id)
 		print("Document's Topic : ",self.choicedoc.topic)
 		#print("Document's length : ",self.choicedoc.length)
