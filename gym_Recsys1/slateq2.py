@@ -48,7 +48,7 @@ class Model:
 		return sess.run(self._logits, feed_dict={self._states: state.reshape(1, self._num_states)})
 
 	def predict_batch(self, states, sess):
-		return sess.run(self._logits, feed_dict={self._states: states})
+		return sess.run(self._logits, feed_dict={self._states: states.reshape(5,1)})
 
 	def train_batch(self, sess, x_batch, y_batch):
 		sess.run(self._optimizer, feed_dict={self._states: x_batch, self._q_s_a: y_batch})
@@ -143,7 +143,7 @@ class RecomRunner:
 		# predict Q(s,a) given the batch of states
 		q_s_a = self._model.predict_batch(states.reshape(5,1), self._sess)
 		# predict Q(s',a') - so that we can do gamma * max(Q(s'a')) below
-		q_s_a_d = self._model.predict_batch(next_states, self._sess)
+		q_s_a_d = self._model.predict_batch(next_states.reshape(5,1), self._sess)
 		# setup training arrays
 		x = np.zeros((len(batch), self._model._num_states))
 		y = np.zeros((len(batch), self._model._num_actions))
