@@ -158,7 +158,7 @@ class RecomRunner:
 				current_q[action] = reward
 			else:
 				current_q[action] = reward + 1 * np.amax(q_s_a_d[i])
-			x[i] = state
+			x[i] = state.reshape(5,1)
 			y[i] = current_q
 		self._model.train_batch(self._sess, x, y)
 
