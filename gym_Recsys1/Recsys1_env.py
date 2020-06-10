@@ -241,7 +241,7 @@ class RecSys1(gym.Env):
 		self.choicedoc=random.choice(self.slate)
 		self.user.lastRecom=self.choicedoc.id
 		self.historic.append(self.choicedoc)
-		obs=np.array([self.user.associate_topic_interet[self.choicedoc.topic],self.user.age,self.user.sexe,self.user.localisation,self.user.lastRecom])
+		obs=np.array([self.user.associate_topic_interet[self.choicedoc.topic],self.user.age,self.user.sexe,self.user.localisation,self.user.lastRecom]).reshape(5,1)
 		return obs #self.user.associate_topic_interet[self.choicedoc.topic]
 
 	def _take_doc(self,action):
