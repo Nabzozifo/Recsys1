@@ -17,6 +17,7 @@ sys.path.append('gym_Recsys1/gym_Recsys1/envs/')
 import Recsys1_env as rcs
 import tensorflow.compat.v1 as tf
 tf.disable_v2_behavior() 
+import math
 class Model:
 	def __init__(self, num_states, num_actions, batch_size):
 		self._num_states = num_states
@@ -44,7 +45,7 @@ class Model:
 		self._var_init = tf.global_variables_initializer()
 	
 	def predict_one(self, state, sess):
-		return sess.run(self._logits, feed_dict={self._states: state.reshape(1, self.num_states)})
+		return sess.run(self._logits, feed_dict={self._states: state.reshape(1, self._num_states)})
 
 	def predict_batch(self, states, sess):
 		return sess.run(self._logits, feed_dict={self._states: states})
