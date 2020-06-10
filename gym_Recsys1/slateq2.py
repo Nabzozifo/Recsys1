@@ -185,7 +185,7 @@ model = Model(num_states, num_actions, BATCH_SIZE)
 mem = Memory(50000)
 
 with tf.Session() as sess:
-	LAMBDA=0.5	
+	LAMBDA=0.9999	
 	sess.run(model._var_init)
 	num_episodes = 50
 	MAX_EPSILON=1
