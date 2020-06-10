@@ -233,7 +233,7 @@ class RecSys1(gym.Env):
 		self.budget=200
 		self.historic=[]
 		self.action_space=spaces.Discrete(combin(len(self.alldocs),3))#allPossibleSlates(10,3,self.mdocs)#gym.spaces.Box(low=0,high=120,shape=(4,120),dtype=np.int)spaces.Discrete(combin(10,3))
-		self.observation_space=gym.spaces.Box(low=-3, high=1235, shape=(1, 1), dtype=np.float32)
+		self.observation_space=gym.spaces.Box(low=-3, high=10, shape=(1, 1), dtype=np.float32)
 
 	def next_Observation(self):
 		self.slate=self.allslates[self.action_space.sample()]
