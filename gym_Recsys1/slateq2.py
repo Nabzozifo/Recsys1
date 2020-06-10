@@ -89,7 +89,8 @@ class RecomRunner:
 		state = self._env.reset()
 		tot_reward = 0
 		#max_x = -100
-		while True:
+		done = False
+		while not done:
 			if self._render:
 				self._env.render()
 
