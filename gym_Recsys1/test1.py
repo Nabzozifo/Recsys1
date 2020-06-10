@@ -16,12 +16,6 @@ import sys
 sys.path.append('gym_Recsys1/gym_Recsys1/envs/')
 import Recsys1_env as rcs
 
-#print(rcs.geNerNuser(10))
-#random.seed(30)
-users=rcs.geNerNuser(10)
-docs=rcs.geNerNdocument(100)
-env = gym.make('Recsys1-v0',user=users[1],alldocs=docs)
-
 def createEpsilonGreedyPolicy(Q, epsilon, num_actions): 
 	""" 
 	Creates an epsilon-greedy policy based 
@@ -100,57 +94,89 @@ def qLearning(env, num_episodes, discount_factor = 1.0,
 			state = next_state 
 	
 	return Q,stats
+#print(rcs.geNerNuser(10))
+random.seed(30)
+users=rcs.geNerNuser(10)
+docs=rcs.geNerNdocument(100)
+docu=rcs.Document(1111,1,4,5.22589655899)
+docs.append(docu)
+#env = gym.make('Recsys1-v0',user=users[1],alldocs=docs)
+rs=open("result.txt",'w')
+plt.figure(figsize=(20,10))
+import seaborn as sns
+for i in range(1,4):
+	env = gym.make('Recsys1-v0',user=users[i],alldocs=docs)
+	q_table,stats=qLearning(env, 100) 
+	#print(q_table)
+	#plottings.plot_episode_stats(stats)
 
-q_table,stats=qLearning(env, 100) 
-#print(q_table)
-#plottings.plot_episode_stats(stats)
-
-"""Evaluate agent's performance after Q-learning"""
-
-total_epochs=0
-episodes = 10
-Reward=[]
-total_nb_nul_doc=0
-total_nb_pass_doc=0
-total_nb_consomdoc=0
-LTV=[]
-doc_consume=[]
-for _ in range(episodes):
-   
-	state = env.reset()
-	nb_consomdoc=0
-	nb_nul_doc=0
-	nb_pass_doc=0
-	epochs= 0
-	total_reward = 0
-	total_ltv=0
+	"""Evaluate agent's performance after Q-learning"""
+	total_epochs=0
+	episodes = 10
+	Reward=[]
+	total_nb_nul_doc=0
+	total_nb_pass_doc=0
+	total_nb_consomdoc=0
+	LTV=[]
+	doc_consume=[]
+	for _ in range(episodes):
 	
-	done = False
+		state = env.reset()
+		nb_consomdoc=0
+		nb_nul_doc=0
+		nb_pass_doc=0
+		epochs= 0
+		total_reward = 0
+		total_ltv=0
+		
+		done = False
+		
+		while not done:
+			action = np.argmax(q_table[state])
+			ltv=np.max(q_table[state])
+			state, reward, done, info = env.step(action)
+			total_reward+=reward
+			total_ltv+=ltv
+			epochs += 1
+		Reward.append(total_reward)
+		LTV.append(total_ltv)
+		total_nb_nul_doc+=nb_nul_doc
+		total_nb_pass_doc+=nb_pass_doc
+		total_nb_consomdoc+=nb_consomdoc
+		total_epochs +=epochs 
+		doc_consume+=env.historic
 	
-	while not done:
-		action = np.argmax(q_table[state])
-		ltv=np.max(q_table[state])
-		state, reward, done, info = env.step(action)
-		total_reward+=reward
-		total_ltv+=ltv
-		epochs += 1
-	Reward.append(total_reward)
-	LTV.append(total_ltv)
-	total_nb_nul_doc+=nb_nul_doc
-	total_nb_pass_doc+=nb_pass_doc
-	total_nb_consomdoc+=nb_consomdoc
-	total_epochs +=epochs 
-	doc_consume+=env.historic
-print("Average Reward : ",sum(Reward)/len(Reward))
-from collections import Counter
-print("user : ",users[1])
-print("total document consomme : ",len(doc_consume))
-z=Counter(doc_consume)
-print("les 10 Documents les plus consomemer : ")
-rest=sorted(z.items(), key=lambda x: x[1],reverse=True)
-#rest2=sorted(z.keys(), key=lambda x: x[1],reverse=True)
-for i in range(10):
-	print("Documents : ",rest[i][0].__str__(),"Nombre de fois consommes : ",rest[i][1])
-plt.plot(LTV)
-plt.show()
-#plottings.plot_episode_stats(stats) 
+	rs.write("Average Reward : "+ str(sum(Reward)/len(Reward))+"\n")
+	from collections import Counter
+	rs.write("user : "+ str(users[i])+"\n")
+	rs.write("total document consomme : "+str(len(doc_consume))+"\n")
+	z=Counter(doc_consume)
+	y=Counter([doc_consume[k].id for k in range(len(doc_consume)) ])
+	rs.write("les 20 Documents les plus consomemer : "+"\n")
+	rest=sorted(z.items(), key=lambda x: x[1],reverse=True)
+	reste=sorted(y.items(), key=lambda x: x[1],reverse=True)
+	# save the names and their respective scores separately
+	# reverse the tuples to go from most frequent to least frequent 
+	doc = list(zip(*reste))[0]
+	#print(doc[1].id)
+	#docu=[doc[k].id for k in range(len(doc))]
+	consom = list(zip(*reste))[1]
+	x_pos = np.arange(len(doc)) 
+
+	# calculate slope and intercept for the linear trend line
+	slope, intercept = np.polyfit(x_pos, consom, 1)
+	trendline = intercept + (slope * x_pos)
+
+	#plt.plot(x_pos, trendline, color='red', linestyle='--')    
+	plt.bar(x_pos, consom,align='center')
+	plt.xticks(x_pos, doc) 
+	plt.ylabel('Nb Consum Doc')
+	plt.savefig("ConsumDoc_"+"user_"+str(i))
+	plt.clf()
+	#rest2=sorted(z.keys(), key=lambda x: x[1],reverse=True)
+	for j in range(20):
+		rs.write("Documents : "+ rest[j][0].__str__()+"Nombre de fois consommes : "+str(rest[j][1])+"\n")
+	plt.plot(LTV)
+	plt.savefig("ltv_"+"user_"+str(i))
+	plt.clf()
+	#plottings.plot_episode_stats(stats) 
