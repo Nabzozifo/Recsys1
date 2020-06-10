@@ -187,9 +187,9 @@ mem = Memory(50000)
 with tf.Session() as sess:
 	LAMBDA=0.5	
 	sess.run(model._var_init)
-	num_episodes = 300
-	MAX_EPSILON=num_episodes//2
-	MIN_EPSILON=1
+	num_episodes = 50
+	MAX_EPSILON=1
+	MIN_EPSILON=0.1
 	gr = RecomRunner(sess, model, env, mem, MAX_EPSILON, MIN_EPSILON,
 					LAMBDA)
 	cnt = 0
