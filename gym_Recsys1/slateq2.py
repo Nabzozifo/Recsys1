@@ -201,6 +201,6 @@ with tf.Session() as sess:
 		cnt += 1
 	plt.plot(gr._reward_store)
 	plt.show()
-	plt.close("all")
+	plt.savefig("reward")
 	#plt.plot(gr.max_x_store)
 	#plt.show()
