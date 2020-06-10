@@ -185,7 +185,7 @@ mem = Memory(50000)
 
 with tf.Session() as sess:
 	LAMBDA=0.5	
-	sess.run()
+	sess.run(model)
 	gr = RecomRunner(sess, model, env, mem, MAX_EPSILON, MIN_EPSILON,
 					LAMBDA)
 	num_episodes = 300
@@ -197,7 +197,7 @@ with tf.Session() as sess:
 			print('Episode {} of {}'.format(cnt+1, num_episodes))
 		gr.run()
 		cnt += 1
-	plt.plot(gr.reward_store)
+	plt.plot(gr._reward_store)
 	plt.show()
 	plt.close("all")
 	#plt.plot(gr.max_x_store)
