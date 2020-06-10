@@ -178,7 +178,7 @@ docs=rcs.geNerNdocument(50)
 docu=rcs.Document(888,1,4,10.22589655899)
 docs.append(docu)
 env = gym.make('Recsys1-v0',user=users[1],alldocs=docs)
-num_states = env.observation_space.shape[0]
+num_states = env.observation_space.shape[1]
 num_actions = env.action_space.n
 BATCH_SIZE=50
 model = Model(num_states, num_actions, BATCH_SIZE)
