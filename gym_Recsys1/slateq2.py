@@ -185,7 +185,7 @@ mem = Memory(50000)
 
 with tf.Session() as sess:
 	LAMBDA=0.5	
-	sess.run(model)
+	sess.run(model._var_init)
 	gr = RecomRunner(sess, model, env, mem, MAX_EPSILON, MIN_EPSILON,
 					LAMBDA)
 	num_episodes = 300
