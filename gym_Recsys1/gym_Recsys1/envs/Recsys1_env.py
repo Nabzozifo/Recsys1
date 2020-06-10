@@ -5,6 +5,8 @@ import math
 import gym
 from gym import error, spaces, utils
 from gym.utils import seeding
+from unique_id import get_unique_id
+
 
 #==================================== Document and Topic Model ====================================
 sigma = 0.1
@@ -43,9 +45,10 @@ class Document:
 
 def geNerNdocument(N):
 	''' generate a set of N document  '''
+	random.seed(30)
 	Doc=[0 for i in range(N+1)]
 	for i in range(N+1):
-		Doc[i]=Document(random.getrandbits(32),choiceAleaList(topic,20),4,choiceAleaList(quality(),20))
+		Doc[i]=Document(10+i,choiceAleaList(topic,20),4,choiceAleaList(quality(),20))
 	return Doc
 
 #==================================== User Interest and Satisfaction Models ====================================
@@ -53,12 +56,12 @@ interest=list(np.random.uniform(-1,1,20))  #Interest of user in different topic
 	
 class User :
 
-	def __init__(self,ids,interests,age,associate_topic_interet,sexe,lastRecom=0,localisation=1234):
+	def __init__(self,ids,age,associate_topic_interet,sexe,localisation,lastRecom=0):
 		self.id=ids
 		self.lastRecom=lastRecom # user's last recommendation
 		self.sexe=sexe
 		self.age=age
-		self.interests=interests #user'sinterest on topic of document
+		#self.interests=interests #user'sinterest on topic of document
 		self.associate_topic_interet=associate_topic_interet
 		self.localisation=localisation
 
@@ -68,18 +71,19 @@ class User :
 def associateTopicInterest():
   ''' Topic =====> user's interest '''
   list1=topic
-  list2=interest
+  list2=list(np.random.uniform(-1,1,20))
   random.Random(4).shuffle(list1)
   random.Random(4).shuffle(list2)
   dico=dict(zip(list1,list2))
   dico.update({0:0})
+  #dico=sorted(dico.items(), key=lambda x: x[1], reverse=True)
   return dico
   
 def geNerNuser(N):
 	''' generate a set of N user  '''
 	us=[0 for i in range(N+1)]
 	for i in range(N+1):
-		us[i]=User(random.getrandbits(16),list(np.random.uniform(-1,1,20)),random.choice([i for i in range(1,90)]),associateTopicInterest(),random.choice([i for i in range(1,3)]))
+		us[i]=User(200+i,random.choice([i for i in range(1,90)]),associateTopicInterest(),random.choice([i for i in range(1,3)]),11100)
 	return us
 
 #We use an extreme value of α = 1.0 so that a user’s satisfaction 
@@ -109,7 +113,7 @@ def generSlateofmDoc(m,user,alldoc):
 	return kdoc
 
 def generSlateofmbestDoc(m,alldoc):
-	''' generate a slate of m best documents candidate from all Documents for a user in relation to the interest of the user  '''
+	''' generate a slate of m best documents candidate from all Documents for a user by quality of doc  '''
 	
 	def myFunc(e):
 		return e.inhQuality
@@ -138,7 +142,7 @@ def unnormalizedprobability(user,document,tau=0.1):
 	return math.exp(tau*userSatisfaction(user,document))
 
 def somme(user,document):
-	tab=[unnormalizedprobability(user,document[i]) for i in range(len(document)) ]
+	tab=[unnormalizedprobability(user,document[i]) for i in range(len(document))]
 	return sum(tab)
 
 #In our experiments, we use the general conditional choice
@@ -149,8 +153,9 @@ def conditionalLogitModel(user,document,slate):#(Eq. (2))
 	which a user  selects document ∈ Documents with unnormalized probability  '''
 	return unnormalizedprobability(user,document)/somme(user,slate)
 
+
 def addNullDoc(slate):
-	slate.append(Document(000000,0,0,0))
+	slate.append(Document(0,0,0,0))
 	return slate
 
 def secondChoicemodel():
@@ -174,7 +179,6 @@ def allPossibleSlates(m,k,mdoc):
   """ generate all combinaisons of slate of k doc in m doc """
   total=combin(m,k)
   return [addNullDoc(random.choices(mdoc,k=k)) for i in range (total)]
-
 
 		
 #==================================== User Dynamics ====================================
@@ -223,30 +227,28 @@ class RecSys1(gym.Env):
 	def __init__(self,user=None,alldocs=None):
 		self.user=user
 		self.alldocs=alldocs
-		#self.mdocs=generSlateofmDoc(10,self.user,self.alldocs)
-		self.mdocs=generSlateofmbestDoc(10,self.alldocs)
+		self.mdocs=generSlateofmDoc(10,self.user,self.alldocs)
+		#self.mdocs=generSlateofmbestDoc(10,self.alldocs)
 		self.allslates=allPossibleSlates(len(self.alldocs),3,self.alldocs)	
 		self.budget=200
 		self.historic=[]
-		self.action_space=spaces.Discrete(combin(len(self.mdocs),3))#allPossibleSlates(10,3,self.mdocs)#gym.spaces.Box(low=0,high=120,shape=(4,120),dtype=np.int)spaces.Discrete(combin(10,3))
-		self.observation_space=gym.spaces.Box(low=-3, high=3, shape=(1, 1), dtype=np.float16)
+		self.action_space=spaces.Discrete(combin(len(self.alldocs),3))#allPossibleSlates(10,3,self.mdocs)#gym.spaces.Box(low=0,high=120,shape=(4,120),dtype=np.int)spaces.Discrete(combin(10,3))
+		self.observation_space=gym.spaces.Box(low=-3, high=1235, shape=(1, 5), dtype=np.float32)
 
 	def next_Observation(self):
 		self.slate=self.allslates[self.action_space.sample()]
 		#self.choicedoc=choiceDocslate(self.user,self.slate)
 		self.choicedoc=random.choice(self.slate)
-		self.user.lastRecom=self.choicedoc
+		self.user.lastRecom=self.choicedoc.id
 		self.historic.append(self.choicedoc)
-		'''obs=[self.user.interests[topicn],
-		conditionalLogitModel(self.user,self.choicedoc,self.slate),
-		userSatisfaction(self.user,self.choicedoc)]'''
-		return self.user.associate_topic_interet[self.choicedoc.topic]
+		obs=np.array([self.user.associate_topic_interet[self.choicedoc.topic],self.user.age,self.user.sexe,self.user.localisation,self.user.lastRecom])
+		return obs #self.user.associate_topic_interet[self.choicedoc.topic]
 
 	def _take_doc(self,action):
 		self.slate=self.allslates[action]
 		#self.choicedoc=choiceDocslate(self.user,self.slate)
 		self.choicedoc=random.choice(self.slate)
-		self.user.lastRecom=self.choicedoc
+		self.user.lastRecom=self.choicedoc.id
 		self.historic.append(self.choicedoc)
 
 	def step(self, action):
@@ -255,7 +257,7 @@ class RecSys1(gym.Env):
 		self.budget=self.budget-self.choicedoc.length+bonus(self.user,self.choicedoc)
 		done=self.budget<0
 		obser=self.next_Observation()
-		info={"Budgetafterconsumption": self.budget,"Satisfaction":userSatisfaction(self.user,self.choicedoc)}
+		info={"Budgetafterconsumption": self.budget,"Satisfaction":userSatisfaction(self.user,self.choicedoc),"Slate":self.slate,"doc":self.choicedoc}
 		self.user.associate_topic_interet[self.choicedoc.topic]=conditionalLogitModel(self.user,self.choicedoc,self.slate)
 		return obser,reward,done,info
 
