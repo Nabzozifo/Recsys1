@@ -178,15 +178,18 @@ docs.append(docu)
 env = gym.make('Recsys1-v0',user=users[1],alldocs=docs)
 num_states = env.observation_space.shape[0]
 num_actions = env.action_space.n
-
+BATCH_SIZE=50
 model = Model(num_states, num_actions, BATCH_SIZE)
 mem = Memory(50000)
 
 with tf.Session() as sess:
+	LAMBDA=0.5	
 	sess.run(model.var_init)
 	gr = RecomRunner(sess, model, env, mem, MAX_EPSILON, MIN_EPSILON,
 					LAMBDA)
 	num_episodes = 300
+	MAX_EPSILON=num_episodes//2
+	MIN_EPSILON=1
 	cnt = 0
 	while cnt < num_episodes:
 		if cnt % 10 == 0:
