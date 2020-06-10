@@ -141,7 +141,7 @@ class RecomRunner:
 		next_states = np.array([(np.zeros(self._model._num_states)
 								if val[3] is None else val[3]) for val in batch])
 		# predict Q(s,a) given the batch of states
-		q_s_a = self._model.predict_batch(states, self._sess)
+		q_s_a = self._model.predict_batch(states.reshape(1,5), self._sess)
 		# predict Q(s',a') - so that we can do gamma * max(Q(s'a')) below
 		q_s_a_d = self._model.predict_batch(next_states, self._sess)
 		# setup training arrays
