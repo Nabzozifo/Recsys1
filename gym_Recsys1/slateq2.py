@@ -138,7 +138,7 @@ class RecomRunner:
 	def _replay(self):
 		batch = self._memory.sample(self._model._batch_size)
 		states = np.array([val[0] for val in batch])
-		print(states.shape)
+		states=states.reshape(5,1)
 		next_states = np.array([(np.zeros(self._model._num_states)
 								if val[3] is None else val[3]) for val in batch])
 		# predict Q(s,a) given the batch of states
