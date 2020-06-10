@@ -71,7 +71,7 @@ class Memory:
 
 class RecomRunner:
 	def __init__(self, sess, model, env, memory, max_eps, min_eps,
-				 decay, render=True):
+				 decay, render=False):
 		self._sess = sess
 		self._env = env
 		self._model = model
