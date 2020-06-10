@@ -13,7 +13,7 @@ matplotlib.style.use('ggplot')
 import gym_Recsys1
 import time
 import sys
-sys.path.append('gym_Recsys1/gym_Recsys1/envs/')
+#sys.path.append('gym_Recsys1/gym_Recsys1/envs/')
 import Recsys1_env as rcs
 import tensorflow.compat.v1 as tf
 tf.disable_v2_behavior() 
@@ -138,7 +138,6 @@ class RecomRunner:
 	def _replay(self):
 		batch = self._memory.sample(self._model._batch_size)
 		states = np.array([val[0] for val in batch])
-		states=states.reshape(5,1)
 		next_states = np.array([(np.zeros(self._model._num_states)
 								if val[3] is None else val[3]) for val in batch])
 		# predict Q(s,a) given the batch of states
