@@ -156,7 +156,7 @@ class RecomRunner:
 				# prediction possible
 				current_q[action] = reward
 			else:
-				current_q[action] = reward + GAMMA * np.amax(q_s_a_d[i])
+				current_q[action] = reward + 1 * np.amax(q_s_a_d[i])
 			x[i] = state
 			y[i] = current_q
 		self._model.train_batch(self._sess, x, y)
@@ -185,7 +185,7 @@ mem = Memory(50000)
 
 with tf.Session() as sess:
 	LAMBDA=0.5	
-	sess.run(model.var_init)
+	sess.run()
 	gr = RecomRunner(sess, model, env, mem, MAX_EPSILON, MIN_EPSILON,
 					LAMBDA)
 	num_episodes = 300
