@@ -15,7 +15,8 @@ import time
 import sys
 sys.path.append('gym_Recsys1/gym_Recsys1/envs/')
 import Recsys1_env as rcs
-import tensorflow as tf
+import tensorflow.compat.v1 as tf
+tf.disable_v2_behavior() 
 class Model:
 	def __init__(self, num_states, num_actions, batch_size):
 		self._num_states = num_states
