@@ -242,7 +242,7 @@ class RecSys1(gym.Env):
 		self.user.lastRecom=self.choicedoc.id
 		self.historic.append(self.choicedoc)
 		obs=np.array([self.user.associate_topic_interet[self.choicedoc.topic],self.user.age,self.user.sexe,self.user.localisation,self.user.lastRecom])
-		return obs.reshape(5,1) #self.user.associate_topic_interet[self.choicedoc.topic]
+		return obs#self.user.associate_topic_interet[self.choicedoc.topic]
 
 	def _take_doc(self,action):
 		self.slate=self.allslates[action]
