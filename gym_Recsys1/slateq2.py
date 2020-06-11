@@ -226,13 +226,18 @@ for i in range(len(users)):
 		plt.title("ConsumDoc_"+"user_"+str(i))
 		plt.savefig("ConsumDoc_"+"user_"+str(i))
 		plt.clf()
+		plt.plot(gr._reward_store)
+		plt.xlabel('Episode')
+		plt.ylabel('Reward')
+		plt.title("reward_"+"user_"+str(i))
+		plt.savefig("reward_"+"user_"+str(i))
+		plt.clf()
 		#rest2=sorted(z.keys(), key=lambda x: x[1],reverse=True)
 		for j in range(30):
 			rs.write("Documents : "+ rest[j][0].__str__()+"Nombre de fois consommes : "+str(rest[j][1])+"\n")
 		total_quality=sum([doc_.inhQuality for doc_ in gr.doc_consume])
 		rs.write("Average qality of documents consume by user : "+str(users[i].id)+"is : "+str(total_quality/len(gr.doc_consume)) +"\n")
 		rs.close
-		plt.plot(gr._reward_store)
-		plt.savefig("reward")
+		
 		#plt.plot(gr.max_x_store)
 		#plt.show()
