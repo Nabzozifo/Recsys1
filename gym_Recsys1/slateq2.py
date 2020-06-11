@@ -204,8 +204,34 @@ with tf.Session() as sess:
 			print('Episode {} of {}'.format(cnt+1, num_episodes))
 		gr.run()
 		cnt += 1
-	print(gr.doc_consume)
-	print(gr._reward_store)
+	%matplotlib inline
+	rs=open("result/result_"+"user_"+str(1)+".txt",'w')
+	rs.write("Interest user before consume docs : "+ str(sorted(users[1].associate_topic_interet.items(), key=lambda x: x[1], reverse=True))+"\n")
+	rs.write("Average Reward : "+ str(sum(gr._reward_store)/len(gr._reward_store))+"\n")
+	from collections import Counter
+	rs.write("user after consume docs : "+ str(sorted(users[i].associate_topic_interet.items(), key=lambda x: x[1], reverse=True))+"\n")
+	rs.write("total document consomme : "+str(len(gr.doc_consume))+"\n")
+	z=Counter(gr.doc_consume)
+	y=Counter([gr.doc_consume[k].id for k in range(len(gr.doc_consume)) ])
+	rs.write("Les Documents consommés : "+"\n")
+	rest=sorted(z.items(), key=lambda x: x[1],reverse=True)
+	reste=sorted(y.items(), key=lambda x: x[1],reverse=True)
+	doc = list(zip(*reste))[0]
+	consom = list(zip(*reste))[1]
+	x_pos = np.arange(len(doc))   
+	plt.bar(x_pos, consom,align='center')
+	plt.xticks(x_pos, doc) 
+	plt.xlabel('Doc ID')
+	plt.ylabel('Nb Consum Doc')
+	plt.title("ConsumDoc_"+"user_"+str(i))
+	plt.savefig("ConsumDoc_"+"user_"+str(i))
+	plt.clf()
+	#rest2=sorted(z.keys(), key=lambda x: x[1],reverse=True)
+	for j in range(len(rest)):
+		rs.write("Documents : "+ rest[j][0].__str__()+"Nombre de fois consommes : "+str(rest[j][1])+"\n")
+	total_quality=sum([doc_.inhQuality for doc_ in gr.doc_consume])
+	rs.write("Average qality of documents consume by user : "+str(users[i].id)+"is : "+str(total_quality/len(gr.doc_consume)) +"\n")
+	rs.close
 	plt.plot(gr._reward_store)
 	plt.show()
 	plt.savefig("reward")
