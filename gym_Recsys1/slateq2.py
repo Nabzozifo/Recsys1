@@ -182,58 +182,57 @@ users=[u1,u2,u3,u4,u5,u6,u7,u8,u9]
 docs=rcs.geNerNdocument(50)
 docu=rcs.Document(888,1,4,10.22589655899)
 docs.append(docu)
-env = gym.make('Recsys1-v0',user=users[1],alldocs=docs)
-num_states = env.observation_space.shape[1]
-num_actions = env.action_space.n
-BATCH_SIZE=50
-model = Model(num_states, num_actions, BATCH_SIZE)
-mem = Memory(50000)
+for i in range(len(users)):
+	env = gym.make('Recsys1-v0',user=users[i],alldocs=docs)
+	num_states = env.observation_space.shape[1]
+	num_actions = env.action_space.n
+	BATCH_SIZE=50
+	model = Model(num_states, num_actions, BATCH_SIZE)
+	mem = Memory(50000)
 
-with tf.Session() as sess:
-	LAMBDA=0.9999	
-	sess.run(model._var_init)
-	num_episodes = 50
-	MAX_EPSILON=1
-	MIN_EPSILON=0.1
-	gr = RecomRunner(sess, model, env, mem, MAX_EPSILON, MIN_EPSILON,
-					LAMBDA)
-	cnt = 0
-
-	while cnt < num_episodes:
-		if cnt % 10 == 0:
-			print('Episode {} of {}'.format(cnt+1, num_episodes))
-		gr.run()
-		cnt += 1
-	
-	rs=open("result_"+"user_"+str(1)+".txt",'w')
-	rs.write("Interest user before consume docs : "+ str(sorted(users[1].associate_topic_interet.items(), key=lambda x: x[1], reverse=True))+"\n")
-	rs.write("Average Reward : "+ str(sum(gr._reward_store)/len(gr._reward_store))+"\n")
-	from collections import Counter
-	rs.write("user after consume docs : "+ str(sorted(users[1].associate_topic_interet.items(), key=lambda x: x[1], reverse=True))+"\n")
-	rs.write("total document consomme : "+str(len(gr.doc_consume))+"\n")
-	z=Counter(gr.doc_consume)
-	y=Counter([gr.doc_consume[k].id for k in range(len(gr.doc_consume)) ])
-	rs.write("Les Documents consommés : "+"\n")
-	rest=sorted(z.items(), key=lambda x: x[1],reverse=True)
-	reste=sorted(y.items(), key=lambda x: x[1],reverse=True)
-	doc = list(zip(*reste))[0]
-	consom = list(zip(*reste))[1]
-	x_pos = np.arange(len(doc))   
-	plt.bar(x_pos, consom,align='center')
-	plt.xticks(x_pos, doc) 
-	plt.xlabel('Doc ID')
-	plt.ylabel('Nb Consum Doc')
-	plt.title("ConsumDoc_"+"user_"+str(1))
-	plt.savefig("ConsumDoc_"+"user_"+str(1))
-	plt.clf()
-	#rest2=sorted(z.keys(), key=lambda x: x[1],reverse=True)
-	for j in range(len(rest)):
-		rs.write("Documents : "+ rest[j][0].__str__()+"Nombre de fois consommes : "+str(rest[j][1])+"\n")
-	total_quality=sum([doc_.inhQuality for doc_ in gr.doc_consume])
-	rs.write("Average qality of documents consume by user : "+str(users[1].id)+"is : "+str(total_quality/len(gr.doc_consume)) +"\n")
-	rs.close
-	plt.plot(gr._reward_store)
-	plt.show()
-	plt.savefig("reward")
-	#plt.plot(gr.max_x_store)
-	#plt.show()
+	with tf.Session() as sess:
+		LAMBDA=0.9999	
+		sess.run(model._var_init)
+		num_episodes = 50
+		MAX_EPSILON=1
+		MIN_EPSILON=0.1
+		gr = RecomRunner(sess, model, env, mem, MAX_EPSILON, MIN_EPSILON,
+						LAMBDA)
+		cnt = 0
+		rs=open("result_"+"user_"+str(i)+".txt",'w')
+		rs.write("Interest user before consume docs : "+ str(sorted(users[i].associate_topic_interet.items(), key=lambda x: x[1], reverse=True))+"\n")
+		while cnt < num_episodes:
+			if cnt % 10 == 0:
+				print('Episode {} of {}'.format(cnt+1, num_episodes))
+			gr.run()
+			cnt += 1
+		
+		rs.write("Average Reward : "+ str(sum(gr._reward_store)/len(gr._reward_store))+"\n")
+		from collections import Counter
+		rs.write("user after consume docs : "+ str(sorted(users[i].associate_topic_interet.items(), key=lambda x: x[1], reverse=True))+"\n")
+		rs.write("total document consomme : "+str(len(gr.doc_consume))+"\n")
+		z=Counter(gr.doc_consume)
+		y=Counter([gr.doc_consume[k].id for k in range(len(gr.doc_consume)) ])
+		rs.write("Les Documents consommés : "+"\n")
+		rest=sorted(z.items(), key=lambda x: x[1],reverse=True)
+		reste=sorted(y.items(), key=lambda x: x[1],reverse=True)
+		doc = list(zip(*reste))[0]
+		consom = list(zip(*reste))[1]
+		x_pos = np.arange(len(doc))   
+		plt.bar(x_pos, consom,align='center')
+		plt.xticks(x_pos, doc) 
+		plt.xlabel('Doc ID')
+		plt.ylabel('Nb Consum Doc')
+		plt.title("ConsumDoc_"+"user_"+str(i))
+		plt.savefig("ConsumDoc_"+"user_"+str(i))
+		plt.clf()
+		#rest2=sorted(z.keys(), key=lambda x: x[1],reverse=True)
+		for j in range(30):
+			rs.write("Documents : "+ rest[j][0].__str__()+"Nombre de fois consommes : "+str(rest[j][1])+"\n")
+		total_quality=sum([doc_.inhQuality for doc_ in gr.doc_consume])
+		rs.write("Average qality of documents consume by user : "+str(users[i].id)+"is : "+str(total_quality/len(gr.doc_consume)) +"\n")
+		rs.close
+		plt.plot(gr._reward_store)
+		plt.savefig("reward")
+		#plt.plot(gr.max_x_store)
+		#plt.show()
