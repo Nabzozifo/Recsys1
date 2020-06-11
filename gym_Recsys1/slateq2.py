@@ -1,6 +1,7 @@
 import gym
 import random
 import itertools 
+%matplotlib inline
 import matplotlib 
 import matplotlib.pyplot as plt
 import matplotlib.style 
@@ -204,7 +205,7 @@ with tf.Session() as sess:
 			print('Episode {} of {}'.format(cnt+1, num_episodes))
 		gr.run()
 		cnt += 1
-	%matplotlib inline
+	
 	rs=open("result/result_"+"user_"+str(1)+".txt",'w')
 	rs.write("Interest user before consume docs : "+ str(sorted(users[1].associate_topic_interet.items(), key=lambda x: x[1], reverse=True))+"\n")
 	rs.write("Average Reward : "+ str(sum(gr._reward_store)/len(gr._reward_store))+"\n")
