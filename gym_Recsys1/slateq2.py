@@ -88,6 +88,7 @@ class RecomRunner:
 		self._max_x_store = []
 		self.doc_consume=[]
 		self.ltv=[]
+		
 
 	def run(self):
 		state = self._env.reset()
@@ -116,7 +117,7 @@ class RecomRunner:
 				next_state = None
 
 			self._memory.add_sample((state, action, reward, next_state))
-			tot_ltv+=self._replay()
+			tot_ltv+=self._replay()*100
 
 			# exponentially decay the eps value
 			self._steps += 1
@@ -180,16 +181,16 @@ class RecomRunner:
 u1=rcs.User(1000,20,rcs.associateTopicInterest(),1,10000)
 u2=rcs.User(1001,21,rcs.associateTopicInterest(),2,10000)
 u3=rcs.User(1002,22,rcs.associateTopicInterest(),1,10000)
-u4=rcs.User(1003,30,rcs.associateTopicInterest(),2,20000)
-u5=rcs.User(1004,31,rcs.associateTopicInterest(),1,20000)
-u6=rcs.User(1005,32,rcs.associateTopicInterest(),2,20000)
-u7=rcs.User(1006,50,rcs.associateTopicInterest(),1,30000)
-u8=rcs.User(1007,51,rcs.associateTopicInterest(),2,30000)
-u9=rcs.User(1008,52,rcs.associateTopicInterest(),1,30000)
+u4=rcs.User(1003,40,rcs.associateTopicInterest(),2,40000)
+u5=rcs.User(1004,41,rcs.associateTopicInterest(),1,40000)
+u6=rcs.User(1005,42,rcs.associateTopicInterest(),2,40000)
+u7=rcs.User(1006,60,rcs.associateTopicInterest(),1,70000)
+u8=rcs.User(1007,61,rcs.associateTopicInterest(),2,70000)
+u9=rcs.User(1008,62,rcs.associateTopicInterest(),1,70000)
 users=[u1,u2,u3,u4,u5,u6,u7,u8,u9]
 #users=rcs.geNerNuser(10)
 #random.seed(30)
-docs=rcs.geNerNdocument(50)
+docs=rcs.geNerNdocument(100)
 docu=rcs.Document(888,1,4,10.22589655899)
 docs.append(docu)
 for i in range(len(users)):
@@ -203,8 +204,8 @@ for i in range(len(users)):
 	with tf.Session() as sess:
 		LAMBDA=0.9999	
 		sess.run(model._var_init)
-		num_episodes = 50
-		MAX_EPSILON=1
+		num_episodes = 100
+		MAX_EPSILON=0.9
 		MIN_EPSILON=0.1
 		gr = RecomRunner(sess, model, env, mem, MAX_EPSILON, MIN_EPSILON,
 						LAMBDA)
@@ -223,9 +224,11 @@ for i in range(len(users)):
 		rs.write("total document consomme : "+str(len(gr.doc_consume))+"\n")
 		z=Counter(gr.doc_consume)
 		y=Counter([gr.doc_consume[k].id for k in range(len(gr.doc_consume)) ])
+		o=Counter([gr.doc_consume[k].topic for k in range(len(gr.doc_consume)) ])
 		rs.write("Les Documents consommés : "+"\n")
 		rest=sorted(z.items(), key=lambda x: x[1],reverse=True)
 		reste=sorted(y.items(), key=lambda x: x[1],reverse=True)
+		rester=sorted(o.items(), key=lambda x: x[1],reverse=True)
 		doc = list(zip(*reste))[0]
 		consom = list(zip(*reste))[1]
 		x_pos = np.arange(len(doc))   
@@ -233,9 +236,21 @@ for i in range(len(users)):
 		plt.xticks(x_pos, doc) 
 		plt.xlabel('Doc ID')
 		plt.ylabel('Nb Consum Doc')
-		plt.title("ConsumDoc_"+"user_"+str(i))
-		plt.savefig("ConsumDoc_"+"user_"+str(i))
+		plt.title("ConsumDoc_"+"user_"+str(i)+"by ID")
+		plt.savefig("ConsumDoc_"+"user_"+str(i)+"by ID")
 		plt.clf()
+
+		doce = list(zip(*rester))[0]
+		consome = list(zip(*rester))[1]
+		x_pose = np.arange(len(doce))   
+		plt.bar(x_pose, consome,align='center')
+		plt.xticks(x_pose, doce) 
+		plt.xlabel('Doc topic')
+		plt.ylabel('Nb Consum Doc')
+		plt.title("ConsumDoc_"+"user_"+str(i)+"by Topic")
+		plt.savefig("ConsumDoc_"+"user_"+str(i)+"by Topic")
+		plt.clf()
+
 		plt.plot(gr._reward_store)
 		plt.xlabel('Episode')
 		plt.ylabel('Reward')
