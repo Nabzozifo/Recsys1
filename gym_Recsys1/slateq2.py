@@ -84,11 +84,11 @@ class RecomRunner:
 		self._steps = 0
 		self._reward_store = []
 		self._max_x_store = []
+		self.doc_consume=[]
 
 	def run(self):
 		state = self._env.reset()
 		tot_reward = 0
-		doc_consume=[]
 		#max_x = -100
 		done = False
 		while not done:
@@ -126,9 +126,9 @@ class RecomRunner:
 			# if the game is done, break the loop
 			if done:
 				self._reward_store.append(tot_reward)
-				print("reward store",self._reward_store)
-				doc_consume+=env.historic
-				print(doc_consume)
+				#print("reward store",self._reward_store)
+				self.doc_consume+=env.historic
+				#print(doc_consume)
 				#self._max_x_store.append(max_x)
 				break
 
@@ -198,11 +198,14 @@ with tf.Session() as sess:
 	gr = RecomRunner(sess, model, env, mem, MAX_EPSILON, MIN_EPSILON,
 					LAMBDA)
 	cnt = 0
+
 	while cnt < num_episodes:
 		if cnt % 10 == 0:
 			print('Episode {} of {}'.format(cnt+1, num_episodes))
 		gr.run()
 		cnt += 1
+	print(gr.doc_consume)
+	print(gr._reward_store)
 	plt.plot(gr._reward_store)
 	plt.show()
 	plt.savefig("reward")
