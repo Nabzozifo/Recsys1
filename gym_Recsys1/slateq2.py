@@ -88,6 +88,7 @@ class RecomRunner:
 	def run(self):
 		state = self._env.reset()
 		tot_reward = 0
+		doc_consume=[]
 		#max_x = -100
 		done = False
 		while not done:
@@ -125,6 +126,9 @@ class RecomRunner:
 			# if the game is done, break the loop
 			if done:
 				self._reward_store.append(tot_reward)
+				print("reward store",self._reward_store)
+				doc_consume+=env.historic
+				print(doc_consume)
 				#self._max_x_store.append(max_x)
 				break
 
