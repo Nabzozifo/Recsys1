@@ -117,7 +117,7 @@ class RecomRunner:
 				next_state = None
 
 			self._memory.add_sample((state, action, reward, next_state))
-			tot_ltv+=self._replay()*100
+			tot_ltv+=self._replay()
 
 			# exponentially decay the eps value
 			self._steps += 1
@@ -190,7 +190,7 @@ u9=rcs.User(1008,62,rcs.associateTopicInterest(),1,70000)
 users=[u1,u2,u3,u4,u5,u6,u7,u8,u9]
 #users=rcs.geNerNuser(10)
 #random.seed(30)
-docs=rcs.geNerNdocument(100)
+docs=rcs.geNerNdocument(50)
 docu=rcs.Document(888,1,4,10.22589655899)
 docs.append(docu)
 for i in range(len(users)):
@@ -204,7 +204,7 @@ for i in range(len(users)):
 	with tf.Session() as sess:
 		LAMBDA=0.9999	
 		sess.run(model._var_init)
-		num_episodes = 100
+		num_episodes = 50
 		MAX_EPSILON=0.9
 		MIN_EPSILON=0.1
 		gr = RecomRunner(sess, model, env, mem, MAX_EPSILON, MIN_EPSILON,
