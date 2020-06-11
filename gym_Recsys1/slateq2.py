@@ -18,6 +18,8 @@ import Recsys1_env as rcs
 import tensorflow.compat.v1 as tf
 tf.disable_v2_behavior() 
 import math
+plt.figure(figsize=(20,10))
+import seaborn as sns
 class Model:
 	def __init__(self, num_states, num_actions, batch_size):
 		self._num_states = num_states
@@ -85,10 +87,12 @@ class RecomRunner:
 		self._reward_store = []
 		self._max_x_store = []
 		self.doc_consume=[]
+		self.ltv=[]
 
 	def run(self):
 		state = self._env.reset()
 		tot_reward = 0
+		tot_ltv=0
 		#max_x = -100
 		done = False
 		while not done:
@@ -112,7 +116,7 @@ class RecomRunner:
 				next_state = None
 
 			self._memory.add_sample((state, action, reward, next_state))
-			self._replay()
+			tot_ltv+=self._replay()
 
 			# exponentially decay the eps value
 			self._steps += 1
@@ -128,6 +132,7 @@ class RecomRunner:
 				self._reward_store.append(tot_reward)
 				#print("reward store",self._reward_store)
 				self.doc_consume+=env.historic
+				self.ltv.append(tot_ltv)
 				#print(doc_consume)
 				#self._max_x_store.append(max_x)
 				break
@@ -139,8 +144,10 @@ class RecomRunner:
 			return random.randint(0, self._model._num_actions - 1)
 		else:
 			return np.argmax(self._model.predict_one(state, self._sess))
-	
+
+
 	def _replay(self):
+		
 		batch = self._memory.sample(self._model._batch_size)
 		states = np.array([val[0] for val in batch])
 		next_states = np.array([(np.zeros(self._model._num_states)
@@ -163,9 +170,12 @@ class RecomRunner:
 				current_q[action] = reward
 			else:
 				current_q[action] = reward + 1 * np.amax(q_s_a_d[i])
+				
 			x[i] = state
 			y[i] = current_q
 		self._model.train_batch(self._sess, x, y)
+		return np.amax(q_s_a_d[i])
+	
 
 u1=rcs.User(1000,20,rcs.associateTopicInterest(),1,10000)
 u2=rcs.User(1001,21,rcs.associateTopicInterest(),2,10000)
@@ -231,6 +241,10 @@ for i in range(len(users)):
 		plt.ylabel('Reward')
 		plt.title("reward_"+"user_"+str(i))
 		plt.savefig("reward_"+"user_"+str(i))
+		plt.clf()
+		plt.plot(gr.ltv)
+		plt.title("user_"+str(i)+" engagement")
+		plt.savefig("result/ltv_"+"user_"+str(i))
 		plt.clf()
 		#rest2=sorted(z.keys(), key=lambda x: x[1],reverse=True)
 		for j in range(30):
