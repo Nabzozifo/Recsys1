@@ -5,7 +5,7 @@ import math
 import gym
 from gym import error, spaces, utils
 from gym.utils import seeding
-from unique_id import get_unique_id
+#from unique_id import get_unique_id
 
 
 #==================================== Document and Topic Model ====================================
