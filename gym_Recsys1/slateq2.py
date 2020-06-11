@@ -244,7 +244,7 @@ for i in range(len(users)):
 		plt.clf()
 		plt.plot(gr.ltv)
 		plt.title("user_"+str(i)+" engagement")
-		plt.savefig("result/ltv_"+"user_"+str(i))
+		plt.savefig("ltv_"+"user_"+str(i))
 		plt.clf()
 		#rest2=sorted(z.keys(), key=lambda x: x[1],reverse=True)
 		for j in range(30):
