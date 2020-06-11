@@ -1,7 +1,6 @@
 import gym
 import random
 import itertools 
-%matplotlib inline
 import matplotlib 
 import matplotlib.pyplot as plt
 import matplotlib.style 
