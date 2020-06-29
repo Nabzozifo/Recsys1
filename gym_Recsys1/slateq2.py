@@ -248,7 +248,7 @@ for i in range(len(users)):
 		plt.xlabel('Doc topic')
 		plt.ylabel('Nb Consum Doc')
 		plt.title("ConsumDoc_"+"user_"+str(i)+"by Topic")
-		plt.savefig("Recsys1/Result/ConsumDoc_"+"user_"+str(i)+"by Topic")
+		plt.savefig("Recsys1/result/ConsumDoc_"+"user_"+str(i)+"by Topic")
 		plt.clf()
 
 		plt.plot(gr._reward_store)
