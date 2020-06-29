@@ -210,7 +210,7 @@ for i in range(len(users)):
 		gr = RecomRunner(sess, model, env, mem, MAX_EPSILON, MIN_EPSILON,
 						LAMBDA)
 		cnt = 0
-		rs=open("gym_Recsys1/Result/result_"+"user_"+str(i)+".txt",'w')
+		rs=open("Recsys1/result/result_"+"user_"+str(i)+".txt",'w')
 		rs.write("Interest user before consume docs : "+ str(sorted(users[i].associate_topic_interet.items(), key=lambda x: x[1], reverse=True))+"\n")
 		while cnt < num_episodes:
 			if cnt % 10 == 0:
@@ -237,7 +237,7 @@ for i in range(len(users)):
 		plt.xlabel('Doc ID')
 		plt.ylabel('Nb Consum Doc')
 		plt.title("ConsumDoc_"+"user_"+str(i)+"by ID")
-		plt.savefig("gym_Recsys1/Result/ConsumDoc_"+"user_"+str(i)+"by ID")
+		plt.savefig("Recsys1/result/ConsumDoc_"+"user_"+str(i)+"by ID")
 		plt.clf()
 
 		doce = list(zip(*rester))[0]
@@ -248,18 +248,18 @@ for i in range(len(users)):
 		plt.xlabel('Doc topic')
 		plt.ylabel('Nb Consum Doc')
 		plt.title("ConsumDoc_"+"user_"+str(i)+"by Topic")
-		plt.savefig("gym_Recsys1/Result/ConsumDoc_"+"user_"+str(i)+"by Topic")
+		plt.savefig("Recsys1/Result/ConsumDoc_"+"user_"+str(i)+"by Topic")
 		plt.clf()
 
 		plt.plot(gr._reward_store)
 		plt.xlabel('Episode')
 		plt.ylabel('Reward')
 		plt.title("reward_"+"user_"+str(i))
-		plt.savefig("gym_Recsys1/Result/reward_"+"user_"+str(i))
+		plt.savefig("Recsys1/result/reward_"+"user_"+str(i))
 		plt.clf()
 		plt.plot(gr.ltv)
 		plt.title("user_"+str(i)+" engagement")
-		plt.savefig("gym_Recsys1/Result/ltv_"+"user_"+str(i))
+		plt.savefig("Recsys1/result/ltv_"+"user_"+str(i))
 		plt.clf()
 		#rest2=sorted(z.keys(), key=lambda x: x[1],reverse=True)
 		for j in range(30):
